@@ -1,22 +1,27 @@
 #include <SFML/Graphics.hpp>
+#include "GameEngine.hpp"
 
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(400, 400), "SFML works!");
-	sf::CircleShape shape(100.f);
-	shape.setFillColor(sf::Color::Yellow);
+	GameEngine ge;
+	sf::ContextSettings cs;
+	cs.antialiasingLevel = 8;
+	sf::RenderWindow window(sf::VideoMode((unsigned int)ge.getSize().x, (unsigned int)ge.getSize().y), "SFML works!", sf::Style::Close, cs);
+	window.setFramerateLimit(30);
+	window.setKeyRepeatEnabled(false);
 
 	while (window.isOpen())
 	{
-		sf::Event event;
-		while (window.pollEvent(event))
+		sf::Event e;
+		while (window.pollEvent(e))
 		{
-			if (event.type == sf::Event::Closed)
+			if (e.type == sf::Event::Closed)
 				window.close();
+			ge.processEvent(e);
 		}
 
 		window.clear();
-		window.draw(shape);
+		window.draw(ge);
 		window.display();
 	}
 
