@@ -15,10 +15,11 @@ const double PI = 3.14159265358979323846;
 GameEngine::GameEngine()
 {
 	mSelectedColumn = GRIDSIZE.x / 2;
+	mJoueurActif = Jeton::Jaune;
+	mGameEnded = false;
+	mGagnant = Jeton::Vide;
 
-	mGrid.resize(GRIDSIZE.x);
-	for (int i = 0; i < GRIDSIZE.x; ++i)
-		mGrid[i].resize(GRIDSIZE.y, Jeton::Vide);
+	reset();
 
 	mBackgroundShape.setPosition(0, 0);
 	mBackgroundShape.setSize(getSize());
@@ -39,10 +40,20 @@ GameEngine::GameEngine()
 	mJetonRouge.setPointCount(20);
 	mJetonRouge.setFillColor(JET_ROUGE_COLOR);
 	mJetonRouge.setRadius(JETON_RADIUS);
-
-	mJoueurActif = Jeton::Jaune;
 }
 GameEngine::~GameEngine() {
+}
+
+void GameEngine::reset()
+{
+	mSelectedColumn = GRIDSIZE.x / 2;
+	mJoueurActif = Jeton::Jaune;
+	mGameEnded = false;
+	mGagnant = Jeton::Vide;
+
+	mGrid.resize(GRIDSIZE.x);
+	for (int i = 0; i < GRIDSIZE.x; ++i)
+		mGrid[i].resize(GRIDSIZE.y, Jeton::Vide);
 }
 
 void GameEngine::processEvent(const sf::Event & e) {
@@ -109,6 +120,7 @@ bool GameEngine::placerJeton()
 	}
 	return false;
 }
+
 bool GameEngine::checkGridFull() const
 {
 	for (int x = 0; x < GRIDSIZE.x; ++x)
@@ -119,7 +131,34 @@ bool GameEngine::checkGridFull() const
 }
 GameEngine::Jeton GameEngine::checkPuissance4() const
 {
+	for (int x = 0; x < GRIDSIZE.x; ++x) {
+		for (int y = 0; y < GRIDSIZE.y; ++y) {
+			if (check4Aligne(mGrid.at(x).at(y), sf::Vector2i(x, y)))
+				return mGrid.at(x).at(y);
+		}
+	}
 	return Jeton::Vide;
+}
+
+bool GameEngine::check4Aligne(Jeton couleur, sf::Vector2i pos) const
+{
+	return check4Aligne(couleur, pos, sf::Vector2i(0, 1)) || check4Aligne(couleur, pos, sf::Vector2i(1, 1))
+		|| check4Aligne(couleur, pos, sf::Vector2i(1, 0)) || check4Aligne(couleur, pos, sf::Vector2i(1, -1));
+}
+bool GameEngine::check4Aligne(Jeton couleur, sf::Vector2i pos, sf::Vector2i increment) const
+{
+	if (increment.x == 0 && increment.y == 0)
+		return false;
+	if (pos.x + increment.x * 4 < 0 || pos.x + increment.x * 4 >= GRIDSIZE.x)
+		return false;
+	if (pos.y + increment.y * 4 < 0 || pos.y + increment.y * 4 >= GRIDSIZE.y)
+		return false;
+
+	for (int i = 1; i < 4; ++i)
+		if (mGrid.at(pos.x + increment.x * i).at(pos.y + increment.y * i) != couleur)
+			return false;
+
+	return true;
 }
 
 void GameEngine::draw(sf::RenderTarget & target, sf::RenderStates states) const
